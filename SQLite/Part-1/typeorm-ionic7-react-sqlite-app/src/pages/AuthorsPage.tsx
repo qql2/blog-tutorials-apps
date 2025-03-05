@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonCard,
-        IonButtons, IonBackButton, IonIcon, useIonViewWillEnter } from '@ionic/react';
+        IonButtons, IonBackButton, IonIcon, useIonViewWillEnter, IonSegment, IonSegmentButton, IonLabel } from '@ionic/react';
 import './AuthorsPage.css';
 import { save } from 'ionicons/icons';
 
@@ -11,6 +11,11 @@ import { Category } from '../databases/entities/author/category';
 import { Author } from '../databases/entities/author/author';
 import { getCountOfElements } from '../databases/utilities';
 import PostList from '../components/PostList/PostList';
+import AuthorList from '../components/AuthorList/AuthorList';
+import CategoryList from '../components/CategoryList/CategoryList';
+import { useWebPersistence } from '../hooks/useWebPersistence';
+
+type SegmentType = 'authors' | 'posts' | 'categories';
 
 const AuthorsPage: React.FC = () => {
     const [initialRef, setInitialRef] = useState(false);
@@ -18,10 +23,14 @@ const AuthorsPage: React.FC = () => {
     const [authors, setAuthors] = useState<Author[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
+    const [selectedSegment, setSelectedSegment] = useState('authors');
     let errMess = '';
 
     const connection = authorDataSource.dataSource;
     const database = authorDataSource.dbName;
+
+    // Automatically save to web store when data changes
+    useWebPersistence([authors, categories, posts]);
 
     const createAuthor = async (name:string, email:string): Promise<Author> => {
         const author = new Author();
@@ -38,7 +47,7 @@ const AuthorsPage: React.FC = () => {
         }
         await authorRepository.save(author);
         return author;
-    }; 
+    };
     const createCategory = async (name: string): Promise<Category> => {
         const category = new Category();
         category.name = name;
@@ -73,8 +82,9 @@ const AuthorsPage: React.FC = () => {
         }
         await postRepository.save(post);
         return ;
-    }; 
-    const initializePosts = async () => {
+    };
+
+    const loadData = async () => {
         try {
             setIsWeb(sqliteParams.platform === 'web' ? true : false);
             const countAuthor = await getCountOfElements(connection, Author);
@@ -100,65 +110,111 @@ const AuthorsPage: React.FC = () => {
                     await sqliteParams.connection.saveToStore(database);
                 }
             }
-            setAuthors(await connection.manager.find(Author));
-            setCategories(await connection.manager.find(Category));
-            setPosts(await connection
-                    .createQueryBuilder(Post,'post')
-            .innerJoinAndSelect('post.author', 'author')
-            .innerJoinAndSelect('post.categories', 'categories')
-            .orderBy('author.name,post.title')
-            .getMany());
-            
+            await refreshData();
         } catch (e) {
             console.log((e as any).message);
             errMess = `Error: ${(e as any).message}`;
         }               
+    };
+
+    const refreshData = async () => {
+        setAuthors(await connection.manager.find(Author));
+        setCategories(await connection.manager.find(Category));
+        setPosts(await connection
+                .createQueryBuilder(Post,'post')
+                .innerJoinAndSelect('post.author', 'author')
+                .innerJoinAndSelect('post.categories', 'categories')
+                .orderBy('author.name,post.title')
+                .getMany());
     };
               
     const handleSave = (async () => {
         await sqliteParams.connection.saveToStore(database);
         // write database to local disk for development only
         await sqliteParams.connection.saveToLocalDisk(database);
-
     });
 
     useIonViewWillEnter( () => {
         if(initialRef === false) {
-            initializePosts();
+            loadData();
             setInitialRef(true);
           }
-
     });
 
+    useEffect(() => {
+        // Remove aria-hidden from router outlet when this page is active
+        const routerOutlet = document.getElementById('main-content');
+        if (routerOutlet) {
+            routerOutlet.removeAttribute('aria-hidden');
+        }
+
+        return () => {
+            // Clean up when component unmounts
+            const routerOutlet = document.getElementById('main-content');
+            if (routerOutlet) {
+                routerOutlet.setAttribute('aria-hidden', 'false');
+            }
+        };
+    }, []);
+
     return (
-        <IonPage className="AuthorPage">
+        <IonPage className="AuthorPage" role="main">
             <IonHeader>
                 <IonToolbar>
-                <IonTitle>Authors DB</IonTitle>
-                <IonButtons slot="start">
-                    <IonBackButton text="home" defaultHref="/home"></IonBackButton>
-                </IonButtons>
-                {isWeb && (
-                    <IonButtons slot="end">
-                        <IonIcon icon={save} onClick={handleSave}></IonIcon>
+                    <IonTitle>Authors DB</IonTitle>
+                    <IonButtons slot="start">
+                        <IonBackButton text="home" defaultHref="/home"></IonBackButton>
                     </IonButtons>
-                )}
+                    {isWeb && (
+                        <IonButtons slot="end">
+                            <IonIcon 
+                                icon={save} 
+                                onClick={handleSave} 
+                                role="button" 
+                                aria-label="Save database"
+                                style={{ cursor: 'pointer' }}
+                            ></IonIcon>
+                        </IonButtons>
+                    )}
+                </IonToolbar>
+                <IonToolbar>
+                    <IonSegment 
+                        value={selectedSegment} 
+                        onIonChange={e => setSelectedSegment(e.detail.value as SegmentType)} 
+                        role="tablist"
+                    >
+                        <IonSegmentButton value="authors" role="tab">
+                            <IonLabel>Authors</IonLabel>
+                        </IonSegmentButton>
+                        <IonSegmentButton value="posts" role="tab">
+                            <IonLabel>Posts</IonLabel>
+                        </IonSegmentButton>
+                        <IonSegmentButton value="categories" role="tab">
+                            <IonLabel>Categories</IonLabel>
+                        </IonSegmentButton>
+                    </IonSegment>
                 </IonToolbar>
             </IonHeader>
-            <IonContent>
-            {initialRef && (
-                    <div>
-                        <IonCard v-if="errMess.length > 0">
-                            <p>{errMess}</p>
-                        </IonCard>
-                        <div id="userlist-container">
-                            <PostList posts={posts}/>
-                        </div>
+            <IonContent role="region" aria-label="Main content">
+                {initialRef && (
+                    <div role="main">
+                        {errMess.length > 0 && (
+                            <IonCard role="alert">
+                                <p>{errMess}</p>
+                            </IonCard>
+                        )}
+                        {selectedSegment === 'authors' ? (
+                            <AuthorList authors={authors} onAuthorsChange={refreshData} />
+                        ) : selectedSegment === 'posts' ? (
+                            <PostList posts={posts} onPostsChange={refreshData} />
+                        ) : (
+                            <CategoryList categories={categories} onCategoriesChange={refreshData} />
+                        )}
                     </div>
                 )}
             </IonContent>
         </IonPage>
     );
-      
-} 
+};
+
 export default AuthorsPage;

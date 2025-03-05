@@ -1,0 +1,28 @@
+.AuthorList {
+  ion-list-header {
+    padding: 1rem;
+    ion-label {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+  }
+
+  ion-card {
+    margin: 1rem;
+    
+    ion-card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    ion-item {
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      
+      p {
+        margin: 0.5rem 0;
+        color: var(--ion-color-medium);
+      }
+    }
+  }
+} 

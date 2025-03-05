@@ -17,7 +17,7 @@ export const initializeDataSources = (async () => {
         await mDataSource.dataSource.initialize();
         if (mDataSource.dataSource.isInitialized) {
         // run the migrations
-        await mDataSource.dataSource.runMigrations();
+        // await mDataSource.dataSource.runMigrations();
         }
         if( sqliteParams.platform === 'web') {
         await sqliteParams.connection.saveToStore(mDataSource.dbName);

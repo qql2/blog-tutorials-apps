@@ -1,0 +1,49 @@
+.PostForm {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  ion-header {
+    ion-toolbar {
+      --background: var(--ion-color-primary);
+      --color: var(--ion-color-primary-contrast);
+    }
+  }
+
+  ion-content {
+    --background: var(--ion-background-color);
+    position: relative;
+    
+    &::part(scroll) {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+  }
+
+  form {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+
+    ion-item {
+      margin-bottom: 1rem;
+      --padding-start: 0;
+      --inner-padding-end: 0;
+    }
+
+    ion-textarea {
+      min-height: 120px;
+    }
+
+    .ion-padding {
+      margin-top: auto;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    ion-button {
+      margin: 0.5rem 0;
+    }
+  }
+} 
