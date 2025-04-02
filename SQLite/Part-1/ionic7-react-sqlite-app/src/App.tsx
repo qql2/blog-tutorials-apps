@@ -8,6 +8,7 @@ import SqliteService from './services/sqliteService';
 import DbVersionService from './services/dbVersionService';
 import StorageService  from './services/storageService';
 import AppInitializer from './components/AppInitializer/AppInitializer';
+import ElectronInfo from './components/ElectronInfo';
 
 import UsersPage from './pages/UsersPage/UsersPage';
 import AppMenu from './components/AppMenu/AppMenu';
@@ -50,6 +51,7 @@ const App: React.FC = () => {
             <IonApp>
               <IonReactRouter>
                 <AppMenu />
+                <ElectronInfo />
                 <IonRouterOutlet id="main-content">
                   <Route exact path="/home">
                     <Home />

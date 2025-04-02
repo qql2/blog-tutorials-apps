@@ -2,16 +2,21 @@
   "name": "ionic7-react-sqlite-app",
   "private": true,
   "version": "0.0.1",
-  "type": "module",
+  "type": "commonjs",
+  "main": "dist-electron/main/index.js",
   "scripts": {
     "dev": "npm run copy:sql:wasm && vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && electron-builder",
     "copy:sql:wasm": "copyfiles -u 3 node_modules/sql.js/dist/sql-wasm.wasm public/assets",
     "ionic:serve:before": "npm run copy:sql:wasm",
     "preview": "vite preview",
     "test.e2e": "cypress run",
     "test.unit": "vitest",
-    "lint": "eslint"
+    "lint": "eslint",
+    "electron:dev": "vite --mode development",
+    "el:prod": "cross-env NODE_ENV=production vite",
+    "electron:build": "vite build && electron-builder",
+    "electron:preview": "electron ."
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^5.2.3",
@@ -41,14 +46,47 @@
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-legacy": "^4.0.2",
     "@vitejs/plugin-react": "^4.0.1",
+    "concurrently": "^8.2.2",
     "copyfiles": "^2.4.1",
+    "cross-env": "^7.0.3",
     "cypress": "^12.7.0",
+    "electron": "^29.1.0",
+    "electron-builder": "^24.13.3",
     "eslint": "^8.35.0",
     "eslint-plugin-react": "^7.32.2",
     "jsdom": "^22.1.0",
     "typescript": "^5.1.6",
     "vite": "^4.3.9",
-    "vitest": "^0.32.2"
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vitest": "^0.32.2",
+    "wait-on": "^7.2.0"
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project with Electron support",
+  "build": {
+    "appId": "com.ionic.sqlite.electron",
+    "productName": "Ionic React SQLite App",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron",
+      "dist"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
 }

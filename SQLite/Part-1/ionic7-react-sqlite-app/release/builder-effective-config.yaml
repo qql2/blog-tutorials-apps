@@ -1,0 +1,19 @@
+directories:
+  output: release
+  buildResources: build
+appId: com.ionic.sqlite.electron
+productName: Ionic React SQLite App
+files:
+  - filter:
+      - dist-electron
+      - dist
+mac:
+  target:
+    - dmg
+win:
+  target:
+    - nsis
+linux:
+  target:
+    - AppImage
+electronVersion: 35.1.2
